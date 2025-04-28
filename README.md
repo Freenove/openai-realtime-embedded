@@ -1,46 +1,46 @@
 # Open RealtimeAPI Embedded SDK
 
-# Table of Contents
-
-- [Docs](#docs)
-- [Installation](#installation)
-- [Usage](#usage)
+This fork is specifically customized for Freenove Media Kit and can be directly used on it.
 
 ## Platform/Device Support
 
-This SDK has been developed tested on a `esp32s3` and `linux`. You don't need any physical hardware
-to run this SDK. You can use it from Linux directly.
-
-To use it on hardware purchase either of these microcontrollers. Others may work, but this is what
-has been developed against.
-
 * [Freenove ESP32-S3-WROOM](https://www.amazon.com/gp/product/B0BMQ8F7FN)
-* [Sonatino - ESP32-S3 Audio Development Board](https://www.amazon.com/gp/product/B0BVY8RJNP)
 
-You can get a ESP32S3 for much less money on eBay/AliExpress.
+## Installation & Usage
 
-## Installation
+1. Install [IDF SDK](https://github.com/espressif/esp-idf) according to the [tutorial](https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32s3/get-started/index.html#get-started-how-to-get-esp-idf).
 
-Call `set-target` with the platform you are targetting. Today only `linux` and `esp32s3` are supported.
-* `idf.py set-target esp32s3`
+2. Clone code and submodules.
 
-Configure device specific settings. None needed at this time
-* `idf.py menuconfig`
+   `git clone --recurse-submodules https://github.com/Freenove/openai-realtime-embedded`
 
-Set your Wifi SSID + Password as env variables
-* `export WIFI_SSID=foo`
-* `export WIFI_PASSWORD=bar`
-* `export OPENAI_API_KEY=bing`
+3. Generate `privateConfig.json` file.
 
-Build
-* `idf.py build`
+   `cp privateConfig.common.json privateConfig.json`
 
-If you built for `esp32s3` run the following to flash to the device
-* `sudo -E idf.py flash`
+4. Set your Wifi SSID, Password, and openai api key in file `privateConfig.json`. If you don't know OpenAI API key, you need to [register and purchase](https://platform.openai.com/) it. Currently, OpenAI does not provide free services.
 
-If you built for `linux` you can run the binary directly
-* `./build/src.elf`
+   ```
+     "wifi_ssid": "xxxxx",
+     "wifi_password": "xxxxx",
+     "openai_api_key": "xxxxx"
+   ```
 
-See [build.yaml](.github/workflows/build.yaml) for a Docker command to do this all in one step.
+5. Set target platform(if necessary).
 
-## Usage
+   `idf.py set-target esp32s3`
+
+6. Build.
+
+   `idf.py build`
+
+7. Flash to the device.
+
+   `idf.py flash`
+
+8. Open monitor (optional).
+
+   `idf.py monitor`
+
+9. Done! Now you can have a conversation with OpenAI !
+

@@ -1,5 +1,14 @@
 cmake_minimum_required(VERSION 3.19)
 
+file(READ privateConfig.json PV_CFG)
+string(JSON PV_WIFI_SSID GET "${PV_CFG}" wifi_ssid)
+string(JSON PV_WIFI_PASSWORD GET "${PV_CFG}" wifi_password)
+string(JSON PV_OPENAI_API_KEY GET "${PV_CFG}" openai_api_key)
+
+set(ENV{WIFI_SSID} ${PV_WIFI_SSID})
+set(ENV{WIFI_PASSWORD} ${PV_WIFI_PASSWORD})
+set(ENV{OPENAI_API_KEY} ${PV_OPENAI_API_KEY})
+
 if(NOT IDF_TARGET STREQUAL linux)
   if(NOT DEFINED ENV{WIFI_SSID} OR NOT DEFINED ENV{WIFI_PASSWORD})
     message(FATAL_ERROR "Env variables WIFI_SSID and WIFI_PASSWORD must be set")

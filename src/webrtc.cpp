@@ -6,16 +6,31 @@
 #include <esp_event.h>
 #include <esp_log.h>
 #include <string.h>
+#include <cJSON.h>
 
 #include "main.h"
 
-#define TICK_INTERVAL 15
+#define TICK_INTERVAL 5
 #define GREETING                                                    \
   "{\"type\": \"response.create\", \"response\": {\"modalities\": " \
   "[\"audio\", \"text\"], \"instructions\": \"Say 'How can I help?.'\"}}"
 
 PeerConnection *peer_connection = NULL;
 
+void parse_response(const char* json_str) {
+  cJSON *root = cJSON_Parse(json_str);
+  if (root == NULL) {
+      // printf("JSON parse failed\n");
+      return;
+  }
+  
+  cJSON *transcript = cJSON_GetObjectItem(root, "transcript");
+  if (transcript != NULL && cJSON_IsString(transcript)) {
+      printf("msg: %s\n", transcript->valuestring);
+  }
+  
+  cJSON_Delete(root);
+}
 #ifndef LINUX_BUILD
 StaticTask_t task_buffer;
 void oai_send_audio_task(void *user_data) {
@@ -33,6 +48,7 @@ static void oai_ondatachannel_onmessage_task(char *msg, size_t len,
 #ifdef LOG_DATACHANNEL_MESSAGES
   ESP_LOGI(LOG_TAG, "DataChannel Message: %s", msg);
 #endif
+  parse_response(msg);
 }
 
 static void oai_ondatachannel_onopen_task(void *userdata) {
@@ -60,8 +76,8 @@ static void oai_onconnectionstatechange_task(PeerConnectionState state,
   } else if (state == PEER_CONNECTION_CONNECTED) {
 #ifndef LINUX_BUILD
     StackType_t *stack_memory = (StackType_t *)heap_caps_malloc(
-        20000 * sizeof(StackType_t), MALLOC_CAP_SPIRAM);
-    xTaskCreateStaticPinnedToCore(oai_send_audio_task, "audio_publisher", 20000,
+      40000 * sizeof(StackType_t), MALLOC_CAP_SPIRAM);
+    xTaskCreateStaticPinnedToCore(oai_send_audio_task, "audio_publisher", 40000,
                                   NULL, 7, stack_memory, &task_buffer, 0);
 #endif
   }
