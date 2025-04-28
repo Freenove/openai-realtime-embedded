@@ -14,7 +14,7 @@ This fork is specifically customized for Freenove Media Kit and can be directly 
 
    `git clone --recurse-submodules https://github.com/Freenove/openai-realtime-embedded`
 
-3. Generate `privateConfig.json` file.
+3. Generate `privateConfig.json` file (File isolation is to protect your password and key).
 
    `cp privateConfig.common.json privateConfig.json`
 
@@ -26,7 +26,7 @@ This fork is specifically customized for Freenove Media Kit and can be directly 
      "openai_api_key": "xxxxx"
    ```
 
-5. Set target platform(if necessary).
+5. Set target platform (if necessary).
 
    `idf.py set-target esp32s3`
 
