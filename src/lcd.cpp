@@ -14,7 +14,7 @@
 #define TAG "MediaKit"
 
 /**********************
- *     定义引脚和参数
+ *     Define Pins and Parameters
  **********************/
 #define LCD_SPI_HOST SPI3_HOST
 #define DISPLAY_MOSI_PIN GPIO_NUM_21
@@ -27,10 +27,10 @@
 #define DISPLAY_BACKLIGHT_PIN GPIO_NUM_2
 #define BACKLIGHT_PWM_TIMER LEDC_TIMER_0
 #define BACKLIGHT_PWM_CHANNEL LEDC_CHANNEL_0
-#define BACKLIGHT_PWM_FREQ 1000                // PWM 频率：5kHz
-#define BACKLIGHT_RESOLUTION LEDC_TIMER_13_BIT // 13-bit 分辨率 (0 ~ 8191)
+#define BACKLIGHT_PWM_FREQ 1000                // PWM frequency: 5kHz
+#define BACKLIGHT_RESOLUTION LEDC_TIMER_13_BIT // 13-bit resolution (0 ~ 8191)
 
-// 屏幕分辨率和偏移
+// Screen resolution and offset
 #define DISPLAY_WIDTH 240
 #define DISPLAY_HEIGHT 135
 #define DISPLAY_OFFSET_X 40
@@ -39,7 +39,7 @@
 esp_lcd_panel_handle_t panel = NULL;
 lv_disp_t * disp_handle;
 
-//定义一个结构体
+// Define a structure
 typedef struct {
     lv_obj_t *screen;
     lv_obj_t *container;
@@ -48,7 +48,7 @@ typedef struct {
 lvgl_screen_t lvgl_screen;
 
 /**********************
- * @brief 初始化背光 PWM 控制
+ * @brief Initialize backlight PWM control
  **********************/
 void backlight_init(void)
 {
@@ -77,8 +77,8 @@ void backlight_init(void)
 }
 
 /**********************
- * @brief 设置背光亮度
- * @param brightness - 百分比 (0 ~ 100)
+ * @brief Set backlight brightness
+ * @param brightness - percentage (0 ~ 100)
  **********************/
 void set_backlight_brightness(int brightness)
 {
@@ -94,8 +94,8 @@ void set_backlight_brightness(int brightness)
     ledc_update_duty(LEDC_LOW_SPEED_MODE, BACKLIGHT_PWM_CHANNEL);
 }
 
-  void reset_lcd(void) {
-    // 配置引脚为输出模式，并设置默认电平为低
+void reset_lcd(void) {
+    // Configure pin as output mode and set default level to low
     gpio_config_t io_20_conf = {};
     io_20_conf.intr_type = GPIO_INTR_DISABLE;
     io_20_conf.mode = GPIO_MODE_OUTPUT;
@@ -103,7 +103,7 @@ void set_backlight_brightness(int brightness)
     io_20_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     io_20_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     gpio_config(&io_20_conf);
-    gpio_set_level(LCD_RST_PIN, 0); // 设置引脚为低电平
+    gpio_set_level(LCD_RST_PIN, 0); // Set pin to low level
     vTaskDelay(pdMS_TO_TICKS(10));
     gpio_set_level(LCD_RST_PIN, 1);
     vTaskDelay(pdMS_TO_TICKS(10));
@@ -145,13 +145,13 @@ void init_lvgl(void)
     panel_config.rgb_ele_order = LCD_RGB_ELEMENT_ORDER_RGB;
     panel_config.bits_per_pixel = 16;
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7789(io_handle, &panel_config, &panel));
-    esp_lcd_panel_reset(panel);               // 液晶屏复位
+    esp_lcd_panel_reset(panel);               // Reset LCD screen
 
     reset_lcd();
-    esp_lcd_panel_init(panel);                // 初始化配置寄存器
-    esp_lcd_panel_invert_color(panel, true);  // 颜色反转
-    esp_lcd_panel_swap_xy(panel, true);       // 显示翻转 
-    esp_lcd_panel_mirror(panel, true, false); // 镜像
+    esp_lcd_panel_init(panel);                // Initialize configuration registers
+    esp_lcd_panel_invert_color(panel, true);  // Color inversion
+    esp_lcd_panel_swap_xy(panel, true);       // Display rotation 
+    esp_lcd_panel_mirror(panel, true, false); // Mirror
 
     uint16_t *buffer = (uint16_t *)malloc(DISPLAY_WIDTH * sizeof(uint16_t));
     if (buffer == NULL) {
@@ -159,7 +159,7 @@ void init_lvgl(void)
         return;
     }
     for (int i = 0; i < DISPLAY_WIDTH; i++) {
-        buffer[i] = 0xFFFF; // 白色填充 (RGB565 格式)
+        buffer[i] = 0xFFFF; // Fill with white color (RGB565 format)
     }
     for (int y = 0; y < DISPLAY_HEIGHT; y++) {
         esp_lcd_panel_draw_bitmap(panel, 0, y, DISPLAY_WIDTH, y + 1, buffer);
@@ -202,43 +202,44 @@ void init_lvgl(void)
 
 void lvgl_ui(void)
 {
-    lvgl_port_lock(0);  //锁住lvgl
-    // 创建主屏幕对象
+    lvgl_port_lock(0);  // Lock LVGL
+    // Create main screen object
     lvgl_screen.screen = lv_obj_create(lv_scr_act());
     lv_obj_set_size(lvgl_screen.screen, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
-    // 创建容器
+    // Create container
     lvgl_screen.container = lv_obj_create(lvgl_screen.screen);
     lv_obj_set_size(lvgl_screen.container, DISPLAY_WIDTH-2, DISPLAY_HEIGHT-2);
-    lv_obj_center(lvgl_screen.container);                                                   // 居中
-    //隐藏容器的右滑条
+    lv_obj_center(lvgl_screen.container);                                                   // Center
+    // Hide the right scrollbar of the container
     lv_obj_set_style_pad_all(lvgl_screen.container, 0, LV_PART_MAIN);
 
-    lv_obj_set_style_bg_color(lvgl_screen.container, lv_color_hex(0xFFFFFF), LV_PART_MAIN); // 白色背景
-    lv_obj_set_flex_flow(lvgl_screen.container, LV_FLEX_FLOW_COLUMN);                       // 垂直排列
-    lv_obj_set_scroll_dir(lvgl_screen.container, LV_DIR_VER);                               // 垂直滚动
-    lv_obj_set_scrollbar_mode(lvgl_screen.container, LV_SCROLLBAR_MODE_AUTO);               // 自动滚动
-    lvgl_port_unlock(); //解锁lvgl
+    lv_obj_set_style_bg_color(lvgl_screen.container, lv_color_hex(0xFFFFFF), LV_PART_MAIN); // White background
+    lv_obj_set_flex_flow(lvgl_screen.container, LV_FLEX_FLOW_COLUMN);                       // Vertical layout
+    lv_obj_set_scroll_dir(lvgl_screen.container, LV_DIR_VER);                               // Vertical scroll
+    lv_obj_set_scrollbar_mode(lvgl_screen.container, LV_SCROLLBAR_MODE_AUTO);               // Auto scroll
+    lvgl_port_unlock(); // Unlock LVGL
 }
 
-//每次调用这个函数，就在容器中创建一个标签，标签的内容就是text，标签一行不够可以换行，标签背景色为绿色
+// Each time this function is called, create a label in the container with text content.
+// The label can wrap lines if needed. The background color of the label is green.
 void lvgl_ui_label_set_text(const char *text)
 {
     lvgl_port_lock(0); 
     lv_obj_t *btn = lv_btn_create(lvgl_screen.container);
     lv_obj_set_style_bg_color(btn, lv_color_hex(0x00FF00), LV_STATE_DEFAULT);
-    lv_obj_set_width(btn, lv_pct(100));                                          // 占满宽度
-    lv_obj_set_height(btn, LV_SIZE_CONTENT);                                     // 高度自适应内容
-    lv_obj_set_style_radius(btn, 5, LV_STATE_DEFAULT);                           // 圆角
+    lv_obj_set_width(btn, lv_pct(100));                                          // Full width
+    lv_obj_set_height(btn, LV_SIZE_CONTENT);                                     // Height adapts to content
+    lv_obj_set_style_radius(btn, 5, LV_STATE_DEFAULT);                           // Rounded corners
 
-    lv_obj_t *label = lv_label_create(btn);                                      // 创建标签
-    lv_label_set_text(label, text);                                              // 设置标签内容
-    lv_obj_set_style_text_color(label, lv_color_hex(0x000000), LV_STATE_DEFAULT);// 设置标签字体为黑色
-    lv_obj_set_style_text_font(label, &lv_font_montserrat_20, LV_PART_MAIN);     // 设置字体大小为20
-    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN);        // 文字靠左
-    lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);                           // 自动换行
-    lv_obj_set_width(label, lv_pct(100));                                        // 占满宽度
-    lv_obj_set_height(label, LV_SIZE_CONTENT);                                   // 高度自适应内容
+    lv_obj_t *label = lv_label_create(btn);                                      // Create label
+    lv_label_set_text(label, text);                                              // Set label text
+    lv_obj_set_style_text_color(label, lv_color_hex(0x000000), LV_STATE_DEFAULT); // Set text color to black
+    lv_obj_set_style_text_font(label, &lv_font_montserrat_20, LV_PART_MAIN);     // Set font size to 20
+    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN);        // Text align left
+    lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);                           // Auto-wrap
+    lv_obj_set_width(label, lv_pct(100));                                        // Full width
+    lv_obj_set_height(label, LV_SIZE_CONTENT);                                   // Height adapts to content
 
     lv_obj_set_style_pad_column(lvgl_screen.container, 10, LV_PART_MAIN);
 
