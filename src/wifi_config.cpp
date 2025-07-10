@@ -513,7 +513,6 @@ void wifi_config_init(void) {
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
     wifi_config_data_t nvs_config = {0};
-    lvgl_ui_label_set_text("Read wifi config from nvs.");
     bool has_saved_config = read_wifi_config_from_nvs(&nvs_config);
     esp_netif_t *esp_netif_sta;
     esp_netif_t *esp_netif_ap;
