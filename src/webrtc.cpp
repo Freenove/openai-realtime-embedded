@@ -10,6 +10,12 @@
 
 #include "main.h"
 
+#ifndef LINUX_BUILD
+#include "esp_lcd_panel_io.h"
+#include "lcd.h"
+#include "esp_lvgl_port.h"
+#endif
+
 #define TICK_INTERVAL 5
 #define GREETING                                                    \
   "{\"type\": \"response.create\", \"response\": {\"modalities\": " \
@@ -27,6 +33,11 @@ void parse_response(const char* json_str) {
   cJSON *transcript = cJSON_GetObjectItem(root, "transcript");
   if (transcript != NULL && cJSON_IsString(transcript)) {
       printf("msg: %s\n", transcript->valuestring);
+#ifndef LINUX_BUILD
+      char buf[1000];
+      lv_snprintf(buf, sizeof(buf), "msg: %s", transcript->valuestring);
+      lvgl_ui_label_set_text(buf);
+#endif
   }
   
   cJSON_Delete(root);

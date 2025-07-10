@@ -4,6 +4,11 @@
 
 #include "main.h"
 
+#ifndef LINUX_BUILD
+#include "wifi_config.h"
+#include <esp_log.h>
+#endif
+
 #ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif
@@ -77,7 +82,13 @@ void oai_http_request(char *offer, char *answer) {
   config.event_handler = oai_http_event_handler;
   config.user_data = answer;
 
+#ifndef LINUX_BUILD
+  wifi_config_data_t nvs_config = {0}; 
+  read_wifi_config_from_nvs(&nvs_config);
+  snprintf(answer, MAX_HTTP_OUTPUT_BUFFER, "Bearer %s", nvs_config.openai_key);
+#else
   snprintf(answer, MAX_HTTP_OUTPUT_BUFFER, "Bearer %s", OPENAI_API_KEY);
+#endif
 
   esp_http_client_handle_t client = esp_http_client_init(&config);
   esp_http_client_set_method(client, HTTP_METHOD_POST);

@@ -6,6 +6,16 @@
 
 #ifndef LINUX_BUILD
 #include "nvs_flash.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_lcd_panel_io.h"
+#include "lcd.h"
+#include "esp_lvgl_port.h"
+#include "lvgl.h"
+#include "esp_http_server.h"
+#include "wifi_config.h"
+
+static const char *TAG = "Main";
 
 extern "C" void app_main(void) {
   esp_err_t ret = nvs_flash_init();
@@ -20,7 +30,10 @@ extern "C" void app_main(void) {
   peer_init();
   oai_init_audio_capture();
   oai_init_audio_decoder();
-  oai_wifi();
+
+  init_lvgl();      
+  lvgl_ui();         
+  wifi_config_init();
   oai_webrtc();
 }
 #else
