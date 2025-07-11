@@ -185,13 +185,15 @@ static esp_err_t root_get_handler(httpd_req_t *req)
     "        h2 { text-align: center; margin-bottom: 20px; font-size: 1.5em; color: #4a4a4a; }\n" \
     "        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 1em; }\n" \
     "        input[type=\"text\"], input[type=\"password\"] {\n" \
-    "            width: 100%;\n" \
+    "            width: 95%;\n" \
     "            padding: 10px 12px;\n" \
     "            margin-bottom: 16px;\n" \
     "            border: 1px solid #ccc;\n" \
     "            border-radius: 6px;\n" \
     "            font-size: 1em;\n" \
     "            transition: border-color 0.3s ease;\n" \
+    "            display: block;\n" \
+    "            margin: 15px auto;\n" \
     "        }\n" \
     "        input[type=\"text\"]:focus, input[type=\"password\"]:focus {\n" \
     "            border-color: #007bff;\n" \
@@ -199,7 +201,7 @@ static esp_err_t root_get_handler(httpd_req_t *req)
     "            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);\n" \
     "        }\n" \
     "        input[type=\"submit\"] {\n" \
-    "            width: 100%;\n" \
+    "            width: 95%;\n" \
     "            background-color: #007bff;\n" \
     "            color: white;\n" \
     "            padding: 12px;\n" \
@@ -208,6 +210,8 @@ static esp_err_t root_get_handler(httpd_req_t *req)
     "            border-radius: 6px;\n" \
     "            cursor: pointer;\n" \
     "            transition: background-color 0.3s ease;\n" \
+    "            display: block;\n" \
+    "            margin: 30px auto 0px auto;\n" \
     "        }\n" \
     "        input[type=\"submit\"]:hover {\n" \
     "            background-color: #0056b3;\n" \
@@ -222,12 +226,18 @@ static esp_err_t root_get_handler(httpd_req_t *req)
     "                margin-bottom: 16px;\n" \
     "            }\n" \
     "            input[type=\"text\"], input[type=\"password\"] {\n" \
+    "                width: 90%; " \
     "                font-size: 1em;\n" \
     "                padding: 8px 10px;\n" \
+    "                display: block;\n" \
+    "                margin: 15px auto;\n" \
     "            }\n" \
     "            input[type=\"submit\"] {\n" \
+    "                width: 90%; " \
     "                font-size: 1em;\n" \
     "                padding: 10px;\n" \
+    "                display: block;\n" \
+    "                margin: 15px auto;\n" \
     "            }\n" \
     "        }\n" \
     "    </style>\n" \
