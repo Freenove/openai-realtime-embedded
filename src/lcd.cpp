@@ -16,6 +16,9 @@
 /**********************
  *     Define Pins and Parameters
  **********************/
+#define FREENOVE_DEDIA_KIT_1_14_INCH
+//#define FREENOVE_DEDIA_KIT_3_5_INCH
+
 #define LCD_SPI_HOST SPI3_HOST
 #define DISPLAY_MOSI_PIN GPIO_NUM_21
 #define DISPLAY_CLK_PIN GPIO_NUM_47
@@ -31,10 +34,30 @@
 #define BACKLIGHT_RESOLUTION LEDC_TIMER_13_BIT // 13-bit resolution (0 ~ 8191)
 
 // Screen resolution and offset
+#ifdef FREENOVE_DEDIA_KIT_1_14_INCH
 #define DISPLAY_WIDTH 240
 #define DISPLAY_HEIGHT 135
+#define DISPLAY_MIRROR_X true
+#define DISPLAY_MIRROR_Y false
+#define DISPLAY_SWAP_XY true
+#define DISPLAY_INVERT_COLOR true
+#define DISPLAY_RGB_ORDER LCD_RGB_ELEMENT_ORDER_RGB
 #define DISPLAY_OFFSET_X 40
 #define DISPLAY_OFFSET_Y 53
+
+#elif defined FREENOVE_DEDIA_KIT_3_5_INCH
+#define LCD_TYPE_ST7789_SERIAL
+#define DISPLAY_WIDTH 480
+#define DISPLAY_HEIGHT 320
+#define DISPLAY_MIRROR_X false
+#define DISPLAY_MIRROR_Y false
+#define DISPLAY_SWAP_XY true
+#define DISPLAY_INVERT_COLOR true
+#define DISPLAY_RGB_ORDER LCD_RGB_ELEMENT_ORDER_RGB
+#define DISPLAY_OFFSET_X 0
+#define DISPLAY_OFFSET_Y 0
+
+#endif
 
 esp_lcd_panel_handle_t panel = NULL;
 lv_disp_t * disp_handle;
@@ -46,6 +69,40 @@ typedef struct {
 } lvgl_screen_t;
 
 lvgl_screen_t lvgl_screen;
+
+#ifdef FREENOVE_DEDIA_KIT_3_5_INCH
+typedef struct {
+    int cmd;              
+    const void *data;      
+    size_t data_bytes;    
+    unsigned int delay_ms;  
+} st7796_lcd_init_cmd_t;
+
+typedef struct {
+    const st7796_lcd_init_cmd_t *init_cmds;     
+    uint16_t init_cmds_size;                   
+} st7796_vendor_config_t;
+
+st7796_lcd_init_cmd_t st7796_lcd_init_cmds[] = {
+    {0x11, (uint8_t []){ 0x00 }, 0, 120},
+    {0x3A, (uint8_t []){ 0x05 }, 1, 0},
+    {0xF0, (uint8_t []){ 0xC3 }, 1, 0},
+    {0xF0, (uint8_t []){ 0x96 }, 1, 0},
+    {0xB4, (uint8_t []){ 0x01 }, 1, 0},
+    {0xB7, (uint8_t []){ 0xC6 }, 1, 0},
+    {0xC0, (uint8_t []){ 0x80, 0x45 }, 2, 0},
+    {0xC1, (uint8_t []){ 0x13 }, 1, 0},
+    {0xC2, (uint8_t []){ 0xA7 }, 1, 0},
+    {0xC5, (uint8_t []){ 0x0A }, 1, 0},
+    {0xE8, (uint8_t []){ 0x40, 0x8A, 0x00, 0x00, 0x29, 0x19, 0xA5, 0x33}, 8, 0},
+    {0xE0, (uint8_t []){ 0xD0, 0x08, 0x0F, 0x06, 0x06, 0x33, 0x30, 0x33, 0x47, 0x17, 0x13, 0x13, 0x2B, 0x31}, 14, 0},
+    {0xE1, (uint8_t []){ 0xD0, 0x0A, 0x11, 0x0B, 0x09, 0x07, 0x2F, 0x33, 0x47, 0x38, 0x15, 0x16, 0x2C, 0x32},14, 0},
+    {0xF0, (uint8_t []){ 0x3C }, 1, 0},
+    {0xF0, (uint8_t []){ 0x69 }, 1, 120},
+    {0x21, (uint8_t []){ 0x00 }, 0, 0},
+    {0x29, (uint8_t []){ 0x00 }, 0, 0},
+};
+#endif
 
 /**********************
  * @brief Initialize backlight PWM control
@@ -132,26 +189,38 @@ void init_lvgl(void)
     esp_lcd_panel_io_spi_config_t io_config={};
     io_config.cs_gpio_num = DISPLAY_CS_PIN;
     io_config.dc_gpio_num = DISPLAY_DC_PIN;
+#ifdef FREENOVE_DEDIA_KIT_1_14_INCH
     io_config.spi_mode = 3;
+#elif defined FREENOVE_DEDIA_KIT_3_5_INCH
+    io_config.spi_mode = 0;
+#endif
     io_config.pclk_hz = 80 * 1000 * 1000;
     io_config.trans_queue_depth = 10;
     io_config.lcd_cmd_bits = 8;
     io_config.lcd_param_bits = 8;
     ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi(LCD_SPI_HOST, &io_config, &io_handle));
-
+#ifdef FREENOVE_DEDIA_KIT_3_5_INCH
+    st7796_vendor_config_t st7796_vendor_config = {
+        .init_cmds = st7796_lcd_init_cmds,
+        .init_cmds_size = sizeof(st7796_lcd_init_cmds) / sizeof(st7796_lcd_init_cmd_t),
+    };     
+#endif
     ESP_LOGD(TAG, "Install Panel Config");
     esp_lcd_panel_dev_config_t panel_config={};
     panel_config.reset_gpio_num = LCD_RST_PIN;
-    panel_config.rgb_ele_order = LCD_RGB_ELEMENT_ORDER_RGB;
+    panel_config.rgb_ele_order = DISPLAY_RGB_ORDER;
     panel_config.bits_per_pixel = 16;
+#ifdef FREENOVE_DEDIA_KIT_3_5_INCH
+    panel_config.vendor_config = &st7796_vendor_config;
+#endif
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7789(io_handle, &panel_config, &panel));
     esp_lcd_panel_reset(panel);               // Reset LCD screen
 
     reset_lcd();
     esp_lcd_panel_init(panel);                // Initialize configuration registers
-    esp_lcd_panel_invert_color(panel, true);  // Color inversion
-    esp_lcd_panel_swap_xy(panel, true);       // Display rotation 
-    esp_lcd_panel_mirror(panel, true, false); // Mirror
+    esp_lcd_panel_invert_color(panel, DISPLAY_INVERT_COLOR);  // Color inversion
+    esp_lcd_panel_swap_xy(panel, DISPLAY_SWAP_XY);       // Display rotation 
+    esp_lcd_panel_mirror(panel, DISPLAY_MIRROR_X, DISPLAY_MIRROR_Y); // Mirror
 
     uint16_t *buffer = (uint16_t *)malloc(DISPLAY_WIDTH * sizeof(uint16_t));
     if (buffer == NULL) {
@@ -185,9 +254,9 @@ void init_lvgl(void)
     disp_cfg.monochrome = false;
     disp_cfg.color_format = LV_COLOR_FORMAT_RGB565;
 
-    disp_cfg.rotation.swap_xy = true;
-    disp_cfg.rotation.mirror_x = true;
-    disp_cfg.rotation.mirror_y = false;
+    disp_cfg.rotation.swap_xy = DISPLAY_SWAP_XY;
+    disp_cfg.rotation.mirror_x = DISPLAY_MIRROR_X;
+    disp_cfg.rotation.mirror_y = DISPLAY_MIRROR_Y;
 
     disp_cfg.flags.buff_dma = 1;
     disp_cfg.flags.buff_spiram = 0;
@@ -209,7 +278,7 @@ void lvgl_ui(void)
 
     // Create container
     lvgl_screen.container = lv_obj_create(lvgl_screen.screen);
-    lv_obj_set_size(lvgl_screen.container, DISPLAY_WIDTH-2, DISPLAY_HEIGHT-2);
+    lv_obj_set_size(lvgl_screen.container, DISPLAY_WIDTH-10, DISPLAY_HEIGHT-10);
     lv_obj_center(lvgl_screen.container);                                                   // Center
     // Hide the right scrollbar of the container
     lv_obj_set_style_pad_all(lvgl_screen.container, 0, LV_PART_MAIN);
@@ -228,7 +297,7 @@ void lvgl_ui_label_set_text(const char *text)
     lvgl_port_lock(0); 
     lv_obj_t *btn = lv_btn_create(lvgl_screen.container);
     lv_obj_set_style_bg_color(btn, lv_color_hex(0x00FF00), LV_STATE_DEFAULT);
-    lv_obj_set_width(btn, lv_pct(100));                                          // Full width
+    lv_obj_set_width(btn, lv_pct(98));                                           // Full width
     lv_obj_set_height(btn, LV_SIZE_CONTENT);                                     // Height adapts to content
     lv_obj_set_style_radius(btn, 5, LV_STATE_DEFAULT);                           // Rounded corners
 
